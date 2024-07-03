@@ -18,7 +18,7 @@ __global__ void gpu_print(double* f)
 	printf("message: %f", f[0]);
 	printf("\n");
 }
-__global__ void reduction(double* data, unsigned int n, double* reduced) {
+__global__ void reduction_abs_sum(double* data, unsigned int n, double* reduced) {
 	extern __shared__ double shared[];
 
 
@@ -112,7 +112,7 @@ double CudaReduction::reduce()
 {
 	for (unsigned int i = 0; i < steps; i++)
 	{
-		reduction << < Gp[i], threads, 1024 * sizeof(double) >> > (arr[i], Np[i], arr[i + 1]);
+		reduction_abs_sum << < Gp[i], threads, 1024 * sizeof(double) >> > (arr[i], Np[i], arr[i + 1]);
 	}
 	cudaMemcpy(&res, res_array, sizeof(double), cudaMemcpyDeviceToHost);
 
