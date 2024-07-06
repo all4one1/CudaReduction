@@ -12,7 +12,7 @@ int main()
 {
 
     double* ptr_d;
-    int N = 1234;
+    int N = 123456;
     int B = N * sizeof(double);
     cudaMalloc((void**)&ptr_d, B);
 
@@ -26,5 +26,6 @@ int main()
 
 
     CuRe.auto_test();
+
     return 0;
 }

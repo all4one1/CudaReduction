@@ -20,11 +20,7 @@ struct CudaReduction
 
 	void print_check();
 	double reduce();
-	static double reduce(double* device_ptr, unsigned int N, unsigned int thr = 1024)
-	{
-		CudaReduction temp(device_ptr, N, thr);
-		return temp.reduce();
-	}
+	static double reduce(double* device_ptr, unsigned int N, unsigned int thr = 1024);
 
 	void auto_test();
 };

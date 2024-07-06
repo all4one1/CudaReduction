@@ -118,3 +118,9 @@ double CudaReduction::reduce()
 
 	return res;
 }
+
+double CudaReduction::reduce(double* device_ptr, unsigned int N, unsigned int thr)
+{
+	CudaReduction temp(device_ptr, N, thr);
+	return temp.reduce();
+}
