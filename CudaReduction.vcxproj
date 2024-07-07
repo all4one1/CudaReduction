@@ -78,12 +78,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CuReduction.h" />
+    <ClInclude Include="CuReductionHeaderOnly.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CuReduction.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <CudaCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
