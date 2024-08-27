@@ -18,6 +18,7 @@ struct CudaReduction
 	CudaReduction(double* device_ptr, unsigned int N, unsigned int thr = 1024);
 	CudaReduction(unsigned int N, unsigned int thr = 1024);
 	CudaReduction();
+	~CudaReduction();
 
 	void print_check();
 	double reduce();

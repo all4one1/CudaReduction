@@ -130,7 +130,13 @@ struct CudaReduction
 			arr[i] = res_array;
 	}
 
-
+	~CudaReduction()
+	{
+		cudaFree(res_array);
+		delete[] Gp;
+		delete[] Np;
+		delete[] arr;
+	}
 
 	void print_check() 
 	{

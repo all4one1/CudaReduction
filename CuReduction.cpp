@@ -120,6 +120,15 @@ CudaReduction::CudaReduction(double* device_ptr, unsigned int N, unsigned int th
 }
 
 
+CudaReduction::~CudaReduction()
+{
+	cudaFree(res_array);
+	delete[] Gp;
+	delete[] Np;
+	delete[] arr;
+}
+
+
 void CudaReduction::print_check()
 {
 	gpu_print << <1, 1 >> > (res_array);
