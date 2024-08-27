@@ -69,6 +69,34 @@ struct CudaReduction
 	double* res_array;
 	double res = 0;
 	double** arr;
+	CudaReduction() {};
+
+	CudaReduction::CudaReduction(unsigned int N, unsigned int thr)
+	{
+		threads = thr;
+
+		unsigned int GN = N;
+		while (true)
+		{
+			steps++;
+			GN = (unsigned int)ceil(GN / (threads + 0.0));
+			if (GN == 1)  break;
+		}
+		GN = N;
+
+		Gp = new unsigned int[steps];
+		Np = new unsigned int[steps];
+		arr = new double* [steps + 1];
+
+		for (unsigned int i = 0; i < steps; i++)
+			Gp[i] = GN = (unsigned int)ceil(GN / (threads + 0.0));
+		Np[0] = N;
+		for (unsigned int i = 1; i < steps; i++)
+			Np[i] = Gp[i - 1];
+
+		//if (steps == 1) std::cout << "Warning: a small array of data" << std::endl;
+		(steps != 1) ? cudaMalloc((void**)&res_array, sizeof(double) * Np[1]) : cudaMalloc((void**)&res_array, sizeof(double));
+	}
 
 	CudaReduction(double* device_ptr, unsigned int N, unsigned int thr = 1024)
 	{
@@ -102,13 +130,27 @@ struct CudaReduction
 			arr[i] = res_array;
 	}
 
-	CudaReduction() {};
+
 
 	void print_check() 
 	{
 		gpu_print << <1, 1 >> > (res_array);
 	}
 
+	double reduce(double* device_ptr)
+	{
+		arr[0] = device_ptr;
+		for (unsigned int i = 1; i <= steps; i++)
+			arr[i] = res_array;
+
+		for (unsigned int i = 0; i < steps; i++)
+		{
+			reduction_abs_sum << < Gp[i], threads, 1024 * sizeof(double) >> > (arr[i], Np[i], arr[i + 1]);
+		}
+		cudaMemcpy(&res, res_array, sizeof(double), cudaMemcpyDeviceToHost);
+
+		return res;
+	}
 	double reduce()
 	{
 		for (unsigned int i = 0; i < steps; i++)

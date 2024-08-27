@@ -16,16 +16,22 @@ int main()
     int B = N * sizeof(double);
     cudaMalloc((void**)&ptr_d, B);
 
+    {   // usage 1
+        CudaReduction CuRe(ptr_d, N, 1024);
+        double sum = CuRe.reduce();
+        CuRe.auto_test();
+    }
 
-    // usage 1
-    CudaReduction CuRe(ptr_d, N, 1024);
-    double sum1 = CuRe.reduce();
+    {   // usage 2
+        double sum = CudaReduction::reduce(ptr_d, N, 1024);
+    }
 
-    // usage 2
-    double sum2 = CudaReduction::reduce(ptr_d, N, 1024);
+    {   // usage 3
+        CudaReduction CuRe(N, 1024);
+        double sum = CuRe.reduce(ptr_d);
+    }
 
-
-    CuRe.auto_test();
+   
 
     return 0;
 }

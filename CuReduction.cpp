@@ -55,6 +55,38 @@ __global__ void reduction_abs_sum(double* data, unsigned int n, double* reduced)
 
 }
 
+CudaReduction::CudaReduction()
+{
+
+}
+
+CudaReduction::CudaReduction(unsigned int N, unsigned int thr)
+{
+	threads = thr;
+
+	unsigned int GN = N;
+	while (true)
+	{
+		steps++;
+		GN = (unsigned int)ceil(GN / (threads + 0.0));
+		if (GN == 1)  break;
+	}
+	GN = N;
+
+	Gp = new unsigned int[steps];
+	Np = new unsigned int[steps];
+	arr = new double* [steps + 1];
+
+	for (unsigned int i = 0; i < steps; i++)
+		Gp[i] = GN = (unsigned int)ceil(GN / (threads + 0.0));
+	Np[0] = N;
+	for (unsigned int i = 1; i < steps; i++)
+		Np[i] = Gp[i - 1];
+
+	//if (steps == 1) std::cout << "Warning: a small array of data" << std::endl;
+	(steps != 1) ? cudaMalloc((void**)&res_array, sizeof(double) * Np[1]) : cudaMalloc((void**)&res_array, sizeof(double));
+}
+
 CudaReduction::CudaReduction(double* device_ptr, unsigned int N, unsigned int thr)
 {
 	threads = thr;
@@ -78,7 +110,7 @@ CudaReduction::CudaReduction(double* device_ptr, unsigned int N, unsigned int th
 	for (unsigned int i = 1; i < steps; i++)
 		Np[i] = Gp[i - 1];
 
-	if (steps == 1) std::cout << "Warning: a small array of data" << std::endl;
+	//if (steps == 1) std::cout << "Warning: a small array of data" << std::endl;
 	(steps != 1) ? cudaMalloc((void**)&res_array, sizeof(double) * Np[1]) : cudaMalloc((void**)&res_array, sizeof(double));
 
 
@@ -86,10 +118,7 @@ CudaReduction::CudaReduction(double* device_ptr, unsigned int N, unsigned int th
 	for (unsigned int i = 1; i <= steps; i++)
 		arr[i] = res_array;
 }
-CudaReduction::CudaReduction()
-{
 
-}
 
 void CudaReduction::print_check()
 {
@@ -108,6 +137,23 @@ void CudaReduction::auto_test()
 	std::cout << "Cuda result = " << CudaReduction::reduce(ptr_d, N, 128) << std::endl;
 }
 
+
+double CudaReduction::reduce(double* device_ptr)
+{
+	arr[0] = device_ptr;
+	for (unsigned int i = 1; i <= steps; i++)
+		arr[i] = res_array;
+
+	for (unsigned int i = 0; i < steps; i++)
+	{
+		reduction_abs_sum << < Gp[i], threads, 1024 * sizeof(double) >> > (arr[i], Np[i], arr[i + 1]);
+	}
+	cudaMemcpy(&res, res_array, sizeof(double), cudaMemcpyDeviceToHost);
+
+	return res;
+}
+
+
 double CudaReduction::reduce()
 {
 	for (unsigned int i = 0; i < steps; i++)
@@ -124,3 +170,4 @@ double CudaReduction::reduce(double* device_ptr, unsigned int N, unsigned int th
 	CudaReduction temp(device_ptr, N, thr);
 	return temp.reduce();
 }
+
