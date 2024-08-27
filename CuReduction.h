@@ -8,16 +8,17 @@
 struct CudaReduction
 {
 	//GPU-Grid points and Node (total) points
-	unsigned int* Gp, * Np;
+	unsigned int* Gp = nullptr, * Np = nullptr;
 	unsigned int steps = 0, threads = 1024;
 
-	double* res_array;
+	double* res_array = nullptr;
 	double res = 0;
-	double** arr;
+	double** arr = nullptr;
 
 	CudaReduction(double* device_ptr, unsigned int N, unsigned int thr = 1024);
 	CudaReduction(unsigned int N, unsigned int thr = 1024);
 	CudaReduction();
+	~CudaReduction();
 
 	void print_check();
 	double reduce();

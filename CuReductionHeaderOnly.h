@@ -63,12 +63,12 @@ __global__ void reduction_abs_sum(double* data, unsigned int n, double* reduced)
 struct CudaReduction
 {
 	//GPU-Grid points and Node (total) points
-	unsigned int* Gp, * Np;
+	unsigned int* Gp = nullptr, * Np = nullptr;
 	unsigned int steps = 0, threads = 1024;
 
-	double* res_array;
+	double* res_array = nullptr;
 	double res = 0;
-	double** arr;
+	double** arr = nullptr;
 	CudaReduction() {};
 
 	CudaReduction::CudaReduction(unsigned int N, unsigned int thr)
@@ -130,6 +130,13 @@ struct CudaReduction
 			arr[i] = res_array;
 	}
 
+	~CudaReduction()
+	{
+		cudaFree(res_array); res_array = nullptr;
+		delete[] Gp; Gp = nullptr;
+		delete[] Np; Np = nullptr;
+		delete[] arr; arr = nullptr;
+	}
 
 
 	void print_check() 
