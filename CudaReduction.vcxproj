@@ -78,7 +78,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CuReduction.h" />
-    <ClInclude Include="CuReductionHeaderOnly.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CuReduction.cpp" />
