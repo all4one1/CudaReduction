@@ -15,6 +15,14 @@ struct CudaReduction
 	double res = 0;
 	double** arr = nullptr;
 
+	void (*reduction_kernel)();
+	enum ReductionType	
+	{
+		ABSSUM, 
+		SIGNEDSUM, 
+		DOTPRODUCT //TODO
+	} type = ABSSUM;
+
 	CudaReduction(double* device_ptr, unsigned int N, unsigned int thr = 1024);
 	CudaReduction(unsigned int N, unsigned int thr = 1024);
 	CudaReduction();
