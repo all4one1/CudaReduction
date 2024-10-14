@@ -88,6 +88,7 @@ __global__ void reduction_signed_sum(double* data, unsigned int n, double* reduc
 		reduced[blockIdx.x] = shared[0];
 	}
 }
+
 __global__ void dot_product(double* v1, double *v2, unsigned int n, double* reduced) {
 	extern __shared__ double shared[];
 
@@ -123,6 +124,8 @@ __global__ void dot_product(double* v1, double *v2, unsigned int n, double* redu
 		reduced[blockIdx.x] = shared[0];
 	}
 }
+
+	
 
 
 CudaReduction::CudaReduction()
