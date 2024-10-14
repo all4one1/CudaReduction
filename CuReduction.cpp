@@ -54,7 +54,6 @@ __global__ void reduction_abs_sum(double* data, unsigned int n, double* reduced)
 
 
 }
-
 __global__ void reduction_signed_sum(double* data, unsigned int n, double* reduced) {
 	extern __shared__ double shared[];
 
@@ -89,7 +88,41 @@ __global__ void reduction_signed_sum(double* data, unsigned int n, double* reduc
 		reduced[blockIdx.x] = shared[0];
 	}
 }
+__global__ void dot_product(double* v1, double *v2, unsigned int n, double* reduced) {
+	extern __shared__ double shared[];
 
+
+	unsigned int tid = threadIdx.x;
+	unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (i < n) 
+	{
+		shared[tid] = v1[i] * v2[i];
+	}
+	else
+	{
+		shared[tid] = 0.0;
+	}
+
+	__syncthreads();
+
+
+	// do reduction in shared mem
+	for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1)
+	{
+		if (tid < s)
+		{
+			shared[tid] += shared[tid + s];
+		}
+
+		__syncthreads();
+	}
+
+
+	if (tid == 0) {
+		reduced[blockIdx.x] = shared[0];
+	}
+}
 
 
 CudaReduction::CudaReduction()
@@ -183,35 +216,44 @@ void CudaReduction::auto_test()
 	std::cout << "Cuda result = " << CudaReduction::reduce(ptr_d, N, 128) << std::endl;
 }
 
-double CudaReduction::reduce()
+double CudaReduction::reduce(bool withCopy)
 {
-	for (unsigned int i = 0; i < steps; i++)
+	switch (type)
 	{
-		reduction_abs_sum << < Gp[i], threads, 1024 * sizeof(double) >> > (arr[i], Np[i], arr[i + 1]);
+	case CudaReduction::ABSSUM:	
+		for (unsigned int i = 0; i < steps; i++)
+			reduction_abs_sum << < Gp[i], threads, 1024 * sizeof(double) >> > (arr[i], Np[i], arr[i + 1]);
+		break;
+	case CudaReduction::SIGNEDSUM:
+		for (unsigned int i = 0; i < steps; i++)
+			reduction_signed_sum << < Gp[i], threads, 1024 * sizeof(double) >> > (arr[i], Np[i], arr[i + 1]);
+		break;
+	case CudaReduction::DOTPRODUCT:
+		// todo
+		//for (unsigned int i = 0; i < steps; i++)
+		//	dot_product << < Gp[i], threads, 1024 * sizeof(double) >> > (arr[i], arr[i], Np[i], arr[i + 1]); 
+		break;
+	default:
+		break;
 	}
-	cudaMemcpy(&res, res_array, sizeof(double), cudaMemcpyDeviceToHost);
+
+	if (withCopy) cudaMemcpy(&res, res_array, sizeof(double), cudaMemcpyDeviceToHost);
 
 	return res;
 }
 
-double CudaReduction::reduce(double* device_ptr)
+double CudaReduction::reduce(double* device_ptr, bool withCopy)
 {
 	arr[0] = device_ptr;
 	for (unsigned int i = 1; i <= steps; i++)
 		arr[i] = res_array;
 
-	//for (unsigned int i = 0; i < steps; i++)
-	//{
-	//	reduction_abs_sum << < Gp[i], threads, 1024 * sizeof(double) >> > (arr[i], Np[i], arr[i + 1]);
-	//}
-	//cudaMemcpy(&res, res_array, sizeof(double), cudaMemcpyDeviceToHost);
-
-	return reduce();
+	return reduce(withCopy);
 }
 
-double CudaReduction::reduce(double* device_ptr, unsigned int N, unsigned int thr)
+double CudaReduction::reduce(double* device_ptr, unsigned int N, unsigned int thr, bool withCopy)
 {
 	CudaReduction temp(device_ptr, N, thr);
-	return temp.reduce();
+	return temp.reduce(withCopy);
 }
 
