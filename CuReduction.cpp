@@ -135,57 +135,24 @@ CudaReduction::CudaReduction()
 
 CudaReduction::CudaReduction(unsigned int N, unsigned int thr)
 {
-	threads = thr;
+	set_reduced_size(N, thr, false);
 
-	unsigned int GN = N;
-	while (true)
-	{
-		steps++;
-		GN = (unsigned int)ceil(GN / (threads + 0.0));
-		if (GN == 1)  break;
-	}
-	GN = N;
+	if (res_array != nullptr) cudaFree(res_array);
+	cudaMalloc((void**)&res_array, sizeof(double) * N_v[1]);
 
-	Gp = new unsigned int[steps];
-	Np = new unsigned int[steps];
+	if (arr != nullptr) delete[] arr;
 	arr = new double* [steps + 1];
-
-	for (unsigned int i = 0; i < steps; i++)
-		Gp[i] = GN = (unsigned int)ceil(GN / (threads + 0.0));
-	Np[0] = N;
-	for (unsigned int i = 1; i < steps; i++)
-		Np[i] = Gp[i - 1];
-
-	//if (steps == 1) std::cout << "Warning: a small array of data" << std::endl;
-	(steps != 1) ? cudaMalloc((void**)&res_array, sizeof(double) * Np[1]) : cudaMalloc((void**)&res_array, sizeof(double));
 }
 
 CudaReduction::CudaReduction(double* device_ptr, unsigned int N, unsigned int thr)
 {
-	threads = thr;
+	set_reduced_size(N, thr, false);
 
-	unsigned int GN = N;
-	while (true)
-	{
-		steps++;
-		GN = (unsigned int)ceil(GN / (threads + 0.0));
-		if (GN == 1)  break;
-	}
-	GN = N;
+	if (res_array != nullptr) cudaFree(res_array);
+	cudaMalloc((void**)&res_array, sizeof(double) * N_v[1]);
 
-	Gp = new unsigned int[steps];
-	Np = new unsigned int[steps];
+	if (arr != nullptr) delete[] arr;
 	arr = new double* [steps + 1];
-
-	for (unsigned int i = 0; i < steps; i++)
-		Gp[i] = GN = (unsigned int)ceil(GN / (threads + 0.0));
-	Np[0] = N;
-	for (unsigned int i = 1; i < steps; i++)
-		Np[i] = Gp[i - 1];
-
-	//if (steps == 1) std::cout << "Warning: a small array of data" << std::endl;
-	(steps != 1) ? cudaMalloc((void**)&res_array, sizeof(double) * Np[1]) : cudaMalloc((void**)&res_array, sizeof(double));
-
 
 	arr[0] = device_ptr;
 	for (unsigned int i = 1; i <= steps; i++)
@@ -196,11 +163,35 @@ CudaReduction::CudaReduction(double* device_ptr, unsigned int N, unsigned int th
 CudaReduction::~CudaReduction()
 {
 	cudaFree(res_array); res_array = nullptr;
-	delete[] Gp; Gp = nullptr;
-	delete[] Np; Np = nullptr;
 	delete[] arr; arr = nullptr;
+	grid_v.clear();
+	N_v.clear();
 }
 
+void CudaReduction::set_reduced_size(unsigned int N, unsigned int thr, bool doubleRead)
+{
+	if (thr < 64)
+	{
+		std::cout << "more threads needed " << std::endl;
+		threads = 64;
+	}
+
+	unsigned int temp_ = N;
+	threads = thr;
+	N_v.push_back(N);
+
+	steps = 0;
+	while (true)
+	{
+		steps++;
+		if (doubleRead) temp_ = (temp_ + (threads * 2 - 1)) / (threads * 2);
+		else temp_ = (temp_ + threads - 1) / threads;
+
+		grid_v.push_back(temp_);
+		N_v.push_back(temp_);
+		if (temp_ == 1)  break;
+	}
+}
 
 void CudaReduction::print_check()
 {
@@ -225,11 +216,11 @@ double CudaReduction::reduce(bool withCopy)
 	{
 	case CudaReduction::ABSSUM:	
 		for (unsigned int i = 0; i < steps; i++)
-			reduction_abs_sum << < Gp[i], threads, 1024 * sizeof(double) >> > (arr[i], Np[i], arr[i + 1]);
+			reduction_abs_sum << < grid_v[i], threads, 1024 * sizeof(double) >> > (arr[i], N_v[i], arr[i + 1]);
 		break;
 	case CudaReduction::SIGNEDSUM:
 		for (unsigned int i = 0; i < steps; i++)
-			reduction_signed_sum << < Gp[i], threads, 1024 * sizeof(double) >> > (arr[i], Np[i], arr[i + 1]);
+			reduction_signed_sum << < grid_v[i], threads, 1024 * sizeof(double) >> > (arr[i], N_v[i], arr[i + 1]);
 		break;
 	case CudaReduction::DOTPRODUCT:
 		// todo
