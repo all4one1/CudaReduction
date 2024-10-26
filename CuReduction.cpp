@@ -201,14 +201,17 @@ void CudaReduction::print_check()
 void CudaReduction::auto_test()
 {
 	double* ptr_d;
-	int N = 1234;
+	int N = 123456;
 
 	cudaMalloc((void**)&ptr_d, N * sizeof(double));
 	init_test << <1024, 1024 >> > (ptr_d, N);
 
-	std::cout << "Exact value = " << N * (N + 1) / 2 << std::endl;
+	std::cout << std::fixed;
+	std::cout << "Exact value = " << N / 2.0 * (N + 1)  << std::endl;
 	std::cout << "Cuda result = " << CudaReduction::reduce(ptr_d, N, 128) << std::endl;
 }
+
+
 
 double CudaReduction::reduce_legacy(bool withCopy)
 {
@@ -265,4 +268,23 @@ double CudaReduction::reduce(bool withCopy)
 	if (withCopy) cudaMemcpy(&res, res_array, sizeof(double), cudaMemcpyDeviceToHost);
 
 	return res;
+}
+
+
+CuGraph CudaReduction::make_graph(double* device_ptr, bool withCopy)
+{
+	arr[0] = device_ptr;
+	for (unsigned int i = 1; i <= steps; i++)
+		arr[i] = res_array;
+
+	CuGraph graph;
+	for (unsigned int i = 0; i < steps; i++)
+	{
+		void* args[3] = { &arr[i], &N_v[i], &arr[i + 1] };
+		graph.add_kernel_node(threads, grid_v[i], reduction_abs_sum, args, smem);
+	}
+
+	if (withCopy) graph.add_copy_node(&res, res_array, sizeof(double), cudaMemcpyDeviceToHost);
+
+	return graph;
 }

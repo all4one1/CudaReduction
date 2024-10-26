@@ -6,6 +6,9 @@
 #include <cuda.h>
 #include <vector>
 
+#include "CuGraph.h"
+
+
 struct CudaReduction
 {
 	std::vector<unsigned int> grid_v;
@@ -38,4 +41,6 @@ struct CudaReduction
 
 
 	void auto_test();
+
+    CuGraph CudaReduction::make_graph(double* device_ptr, bool withCopy);
 };

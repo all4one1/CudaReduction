@@ -31,7 +31,15 @@ int main()
         double sum = CuRe.reduce(ptr_d);
     }
 
-   
+    {
+        // usage 4
+        // via CUDA Graph
+        CudaReduction CuRe(ptr_d, N, 1024);
+        CuGraph gr = CuRe.make_graph(ptr_d, true);
+        gr.instantiate();
+        gr.launch();
+
+    }
 
     return 0;
 }
