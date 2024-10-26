@@ -11,7 +11,9 @@ struct CudaReduction
 	std::vector<unsigned int> grid_v;
 	std::vector<unsigned int> N_v;
 
-	unsigned int steps = 0, threads = 1024;
+	#define def_threads 512
+	unsigned int N = 0;
+	unsigned int steps = 0, threads = def_threads, smem = sizeof(double) * def_threads;
 
 	double* res_array = nullptr;
 	double res = 0;
@@ -20,7 +22,7 @@ struct CudaReduction
 	void (*reduction_kernel)();
 	enum ReductionType	{ABSSUM, SIGNEDSUM,	DOTPRODUCT 	} type = ABSSUM;
 
-	CudaReduction(double* device_ptr, unsigned int N, unsigned int thr = 1024);
+	CudaReduction(double* device_ptr, unsigned int N, unsigned int thr = def_threads);
 	CudaReduction(unsigned int N, unsigned int thr = 1024);
 	CudaReduction();
 	~CudaReduction();
@@ -29,8 +31,9 @@ struct CudaReduction
 
 	void print_check();
 	double reduce(bool withCopy = true);
+	double reduce_legacy(bool withCopy = true);
 	double reduce(double* device_ptr, bool withCopy = true);
-	static double reduce(double* device_ptr, unsigned int N, unsigned int thr = 1024, bool withCopy = true);
+	static double reduce(double* device_ptr, unsigned int N, unsigned int thr = def_threads, bool withCopy = true);
 
 
 

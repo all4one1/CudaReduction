@@ -78,6 +78,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CuReduction.h" />
+    <ClInclude Include="nvidia_kernels.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CuReduction.cpp" />

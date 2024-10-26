@@ -3,7 +3,7 @@
 #include "device_launch_parameters.h"
 #include <cuda.h>
 #include <iostream>
-
+#include "nvidia_kernels.h"
 __global__ void init_test(double* data, unsigned int n)
 {
 	unsigned int i = threadIdx.x + blockIdx.x * blockDim.x;
@@ -135,7 +135,7 @@ CudaReduction::CudaReduction()
 
 CudaReduction::CudaReduction(unsigned int N, unsigned int thr)
 {
-	set_reduced_size(N, thr, false);
+	set_reduced_size(N, thr, true);
 
 	if (res_array != nullptr) cudaFree(res_array);
 	cudaMalloc((void**)&res_array, sizeof(double) * N_v[1]);
@@ -146,7 +146,7 @@ CudaReduction::CudaReduction(unsigned int N, unsigned int thr)
 
 CudaReduction::CudaReduction(double* device_ptr, unsigned int N, unsigned int thr)
 {
-	set_reduced_size(N, thr, false);
+	set_reduced_size(N, thr, true);
 
 	if (res_array != nullptr) cudaFree(res_array);
 	cudaMalloc((void**)&res_array, sizeof(double) * N_v[1]);
@@ -210,7 +210,7 @@ void CudaReduction::auto_test()
 	std::cout << "Cuda result = " << CudaReduction::reduce(ptr_d, N, 128) << std::endl;
 }
 
-double CudaReduction::reduce(bool withCopy)
+double CudaReduction::reduce_legacy(bool withCopy)
 {
 	switch (type)
 	{
@@ -251,3 +251,18 @@ double CudaReduction::reduce(double* device_ptr, unsigned int N, unsigned int th
 	return temp.reduce(withCopy);
 }
 
+double CudaReduction::reduce(bool withCopy)
+{
+	for (unsigned int i = 0; i < steps; i++)			
+		reduce_<double>(N_v[i], threads, grid_v[i], 5, arr[i], arr[i + 1]);
+
+	//for (unsigned int i = 0; i < steps; i++)
+	//{
+	//	void* args[] = { &arr[i], &arr[i + 1], &N_v[i] };
+	//	cudaLaunchKernel(kernel_ptr, grid_v[i], threads, args, threads * sizeof(double), 0);
+	//}
+
+	if (withCopy) cudaMemcpy(&res, res_array, sizeof(double), cudaMemcpyDeviceToHost);
+
+	return res;
+}
