@@ -38,7 +38,7 @@ struct CudaReduction
 	double reduce(double* device_ptr, bool withCopy = true);
 	static double reduce(double* device_ptr, unsigned int N, unsigned int thr = def_threads, bool withCopy = true);
 
-
+	double check_on_cpu(double* device_ptr, unsigned int N);
 
 	void auto_test();
 
