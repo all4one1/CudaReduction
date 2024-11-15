@@ -212,6 +212,16 @@ void CudaReduction::auto_test()
 }
 
 
+double CudaReduction::check_on_cpu(double* device_ptr, unsigned int N)
+{
+	double* f = new double[N];
+	cudaMemcpy(f, device_ptr, sizeof(double) * N, cudaMemcpyDeviceToHost);
+	double s = 0;
+	for (unsigned int i = 0; i < N; i++)
+		s += abs(f[i]);
+	return s;
+}
+
 
 double CudaReduction::reduce_legacy(bool withCopy)
 {
@@ -253,6 +263,7 @@ double CudaReduction::reduce(double* device_ptr, unsigned int N, unsigned int th
 	CudaReduction temp(device_ptr, N, thr);
 	return temp.reduce(withCopy);
 }
+
 
 double CudaReduction::reduce(bool withCopy)
 {

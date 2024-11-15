@@ -362,3 +362,5 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /main.cpp
+/CudaReduction.vcxproj
+/CudaReduction.vcxproj.filters
