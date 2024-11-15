@@ -83,10 +83,10 @@
     <ClInclude Include="nvidia_kernels.h" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="CuReduction.cpp" />
+    <CudaCompile Include="CuReduction.cu" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="main.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
