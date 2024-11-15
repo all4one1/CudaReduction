@@ -2,7 +2,11 @@
 
 ## Usage:
 ```cpp
-    double* ptr_d; // your device pointer 
+#include "CuReduction.h"
+
+int main()
+{
+    double* ptr_d; // your device pointer
     int N = 123456;
     int B = N * sizeof(double);
     cudaMalloc((void**)&ptr_d, B);
@@ -30,3 +34,6 @@
         gr.instantiate();
         gr.launch();
     }
+
+    return 0;
+}
