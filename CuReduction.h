@@ -22,7 +22,7 @@ struct CudaReduction
 	double res = 0;
 	double** arr = nullptr;
 
-	void (*reduction_kernel)();
+	void *reduction_kernel;
 	enum ReductionType	{ABSSUM, SIGNEDSUM,	DOTPRODUCT 	} type = ABSSUM;
 
 	CudaReduction(double* device_ptr, unsigned int N, unsigned int thr = def_threads);
@@ -44,3 +44,5 @@ struct CudaReduction
 
     CuGraph CudaReduction::make_graph(double* device_ptr, bool withCopy);
 };
+
+
