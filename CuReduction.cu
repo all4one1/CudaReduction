@@ -139,9 +139,9 @@ __global__ void reduce5abs(T* g_idata, T* g_odata, unsigned int n) {
 	unsigned int tid = threadIdx.x;
 	unsigned int i = blockIdx.x * (blockSize * 2) + threadIdx.x;
 
-	T mySum = (i < n) ? g_idata[i] : 0;
+	T mySum = (i < n) ? abs(g_idata[i]) : 0;
 
-	if (i + blockSize < n) mySum += g_idata[i + blockSize];
+	if (i + blockSize < n) mySum += abs(g_idata[i + blockSize]);
 
 	sdata[tid] = mySum;
 	cg::sync(cta);
