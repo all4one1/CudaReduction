@@ -1,5 +1,12 @@
 # CudaReduction
 
+## Clone 
+```
+git clone https://github.com/all4one1/CudaReduction
+```
+
+
+
 ## Usage:
 ```cpp
 #include "CuReduction.h"
