@@ -2,7 +2,7 @@
 
 ## Clone 
 ```
-git clone --recurse-submodules https://github.com/all4one1/CudaReduction
+git clone https://github.com/all4one1/CudaReduction
 ```
 
 
